@@ -1,0 +1,153 @@
+LỘ TRÌNH HỌC AI TIẾP THEO — cho Middle Backend Dev
+==================================================
+
+Bối cảnh
+--------
+- Vị trí hiện tại: Middle Backend Developer
+- Mục tiêu 2 năm: Senior theo hướng DB / DevOps / Fullstack
+- Mục đích học AI: ứng dụng AI vào công việc, dùng AI hiệu quả và tiết kiệm chi phí
+  (KHÔNG phải trở thành ML engineer / research)
+- Đã hoàn thành (repo ../learn_ai): toán nền tảng, numpy NN bằng tay, PyTorch,
+  MNIST/CNN, mini GPT (self-attention, decoder-only transformer)
+
+Kết luận về phần đã học
+-----------------------
+Đã đủ nền tảng "hiểu model hoạt động thế nào". KHÔNG cần học thêm:
+  - Lý thuyết transformer sâu hơn
+  - Train LLM from scratch, pre-training
+  - Tối ưu kernel, distributed training
+Những thứ đó không phục vụ mục tiêu Senior BE/DevOps/Fullstack.
+
+Nguyên tắc phân bổ thời gian
+---------------------------
+- ~80% thời gian học: core Senior path (SQL sâu, system design, k8s, CI/CD,
+  observability, kiến trúc) — xem file career.txt nếu tự lập.
+- ~20% thời gian học: Applied AI (roadmap dưới đây) — kỹ năng khác biệt hoá.
+
+
+================================================================
+PHẦN A — APPLIED AI / LLM ENGINEERING (theo thứ tự ưu tiên)
+================================================================
+
+1. LLM API + PROMPT ENGINEERING THỰC CHIẾN
+-----------------------------------------
+Mục tiêu: gọi LLM như một API service bình thường, có kiểm soát.
+  - Messages API: system/user/assistant, temperature, max_tokens, stop
+  - Structured output: JSON schema / response format, ép model trả đúng cấu trúc
+  - Function calling / tool use: model gọi hàm của mình, mình trả kết quả về
+  - Streaming (SSE) — quan trọng cho UX và cho backend timeout
+  - Prompt patterns: few-shot, chain-of-thought, role prompting, prompt template
+  - Xử lý lỗi: rate limit, retry + backoff, context length exceeded, refusal
+Thực hành: viết 1 client wrapper (Python) có retry, logging token, đổi model dễ.
+Tài liệu: Anthropic API docs, OpenAI cookbook.
+
+2. RAG + EMBEDDINGS + VECTOR DB   <-- trùng hướng DB của bạn
+------------------------------------------------------------
+Mục tiêu: cho LLM trả lời dựa trên tài liệu riêng, không bịa.
+  - Embedding là gì, cosine similarity, kích thước vector
+  - Chunking: cách cắt tài liệu, overlap, metadata
+  - Vector store:
+      * pgvector (Postgres extension) — ƯU TIÊN, vì bạn theo hướng DB
+      * Qdrant hoặc Chroma để so sánh
+  - Retrieval: top-k, hybrid search (BM25 + vector), re-ranking
+  - RAG pipeline: ingest -> embed -> store -> retrieve -> augment prompt -> generate
+  - Đánh giá RAG: retrieval hit rate, faithfulness, answer relevancy
+  - Các lỗi RAG thường gặp: chunk sai, retrieve không liên quan, context nhồi quá nhiều
+Thực hành: PROJECT 1 (xem phần B).
+
+3. AGENTS & TOOL USE / MCP
+--------------------------
+Mục tiêu: LLM tự thực hiện chuỗi hành động qua công cụ.
+  - Vòng lặp agent: think -> call tool -> observe -> repeat -> answer
+  - Định nghĩa tool tốt: tên, mô tả, schema tham số rõ ràng
+  - Giới hạn: max steps, timeout, chi phí leo thang, hallucinated tool call
+  - MCP (Model Context Protocol): chuẩn kết nối tool/data cho AI client
+  - Khi nào KHÔNG cần agent (workflow cố định thì viết code thường rẻ + ổn định hơn)
+Thực hành: PROJECT 2.
+
+4. LLMOps — TỐI ƯU CHI PHÍ & VẬN HÀNH   <-- đây là phần "tiết kiệm" + kỹ năng DevOps
+-----------------------------------------------------------------------------------
+Mục tiêu: chạy LLM trong production rẻ, ổn định, đo được.
+  - Chọn model theo task: model nhỏ/nhanh (Haiku) cho task đơn giản,
+    model mạnh (Sonnet) cho task khó — model routing
+  - Prompt caching: cache phần prompt lặp lại -> giảm chi phí + latency đáng kể
+  - Batch API: task không cần real-time -> rẻ hơn ~50%
+  - Token budget: đếm token trước khi gọi, cắt context, nén lịch sử hội thoại
+  - Observability: Langfuse / Phoenix — trace từng call, cost, latency, token
+  - Evaluation: tạo eval set, chấm điểm output (LLM-as-judge, assertion, regression test)
+  - Đưa eval vào CI: prompt thay đổi -> chạy eval -> không regression mới merge
+  - Guardrails: lọc PII, chặn prompt injection, kiểm tra output
+Thực hành: PROJECT 3.
+
+5. LOCAL / SELF-HOSTED MODELS   <-- DevOps thực hành + cắt chi phí API
+--------------------------------------------------------------------
+Mục tiêu: chạy model trên hạ tầng của mình khi cần riêng tư / rẻ / offline.
+  - Ollama: chạy model local nhanh (Llama, Qwen, Mistral, Phi)
+  - Quantization: GGUF, 4-bit — đánh đổi chất lượng lấy RAM/tốc độ
+  - vLLM: serving throughput cao, OpenAI-compatible API
+  - So sánh: khi nào self-host rẻ hơn API, khi nào không (tính GPU + vận hành)
+  - Deploy: container hoá, đo tokens/sec, concurrency, GPU memory
+Thực hành: thêm nhánh local model + fallback vào PROJECT 3.
+
+6. THÀNH THẠO AI TRONG WORKFLOW HẰNG NGÀY   <-- đòn bẩy lớn nhất, làm song song từ đầu
+----------------------------------------------------------------------------------
+Mục tiêu: dùng AI coding tool như một kỹ năng, không chỉ hỏi bừa.
+  - Claude Code / Cursor / Copilot: khác biệt, khi nào dùng cái nào
+  - Quản lý context: cho tool đúng file, viết CLAUDE.md / rules cho repo
+  - Custom slash command, subagent, hook để tự động việc lặp lại
+  - Dùng AI cho: review code, viết test, refactor, viết migration, đọc codebase lạ,
+    dựng tài liệu, điều tra bug từ log
+  - Giới hạn: không tin mù output, luôn đọc diff, test lại
+  - Prompt cho task lớn: chia nhỏ, mô tả rõ ràng, đưa ví dụ
+  - Chi phí cá nhân: chọn gói phù hợp, biết task nào tốn nhiều token
+
+
+================================================================
+PHẦN B — 3 PROJECT (làm xong 3 cái là đủ để tự tin)
+================================================================
+
+PROJECT 1 — RAG SERVICE trên tài liệu nội bộ
+-------------------------------------------
+Stack: Python + FastAPI + Postgres + pgvector
+  - Ingest: nạp file (md/pdf/txt), chunk, embed, lưu vào pgvector
+  - API: POST /ask -> retrieve top-k -> build prompt -> gọi LLM -> trả lời + nguồn
+  - Có eval set (~20 câu hỏi + đáp án mong đợi), script chấm điểm
+  - Log: mỗi request lưu token vào / ra, cost ước tính, latency
+Học được: RAG, vector DB (khớp hướng DB), API design, đo lường.
+
+PROJECT 2 — AGENT tự động hoá task dev
+-------------------------------------
+Ý tưởng: CLI đọc 1 issue/ticket -> phân tích -> đề xuất fix + sinh test case
+  - Tool: đọc file repo, search code, chạy test, đọc git log
+  - Vòng lặp agent có giới hạn số bước + budget
+  - Output: markdown report (phân tích + patch gợi ý + test)
+Học được: agent loop, tool design, MCP, biết khi nào agent là thừa.
+
+PROJECT 3 — LLMOps DEMO
+----------------------
+  - Deploy 1 model local bằng Ollama (hoặc vLLM)
+  - Router: task đơn giản -> local model; task khó -> API model
+  - Cache layer (Redis) cho prompt lặp; fallback khi provider lỗi
+  - Langfuse: dashboard cost / latency / token theo endpoint
+  - Eval chạy trong GitHub Actions: đổi prompt -> chạy eval -> chặn regression
+Học được: LLMOps, self-hosting, observability, CI — trực tiếp là kỹ năng DevOps.
+
+
+================================================================
+PHẦN C — KHÔNG LÀM (tránh mất thời gian)
+================================================================
+  - Train / fine-tune model lớn from scratch
+  - Đọc sâu paper kiến trúc mới (chỉ đọc bản tóm tắt / blog khi cần)
+  - Tự viết framework agent (dùng cái có sẵn hoặc gọi API trần)
+  - Fine-tuning — chỉ học khi prompt + RAG đã hết cách và có nhu cầu thật
+  - Chạy đua theo model/tool mới mỗi tuần
+
+
+================================================================
+GỢI Ý TIẾN ĐỘ (nhẹ nhàng, song song việc chính)
+================================================================
+Tháng 1-2:  Mục 1 (LLM API) + Mục 6 (AI workflow, làm liên tục từ đây)
+Tháng 3-4:  Mục 2 (RAG + pgvector) -> PROJECT 1
+Tháng 5:    Mục 3 (Agents) -> PROJECT 2
+Tháng 6-7:  Mục 4 (LLMOps) + Mục 5 (local models) -> PROJECT 3
+Sau đó:     Duy trì, áp dụng vào việc thật, cập nhật khi có nhu cầu cụ thể
