@@ -82,13 +82,12 @@ def demo_template():
     print("\n--- injection attempt ---\n", summarize(injection))
 
 if __name__ == "__main__":
-    # demo_role()
-    # print("\n" + "=" * 60 + "\n")
-    # demo_few_shot()
-    # print("\n" + "=" * 60 + "\n")
-    # demo_cot()
-    # print("\n" + "=" * 60 + "\n")
-    # demo_template()
-    for m in client.models.list().data:
-        print(m.id)
+    demo_role()
+    print("\n" + "=" * 60 + "\n")
+    demo_few_shot()
+    print("\n" + "=" * 60 + "\n")
+    demo_cot()
+    print("\n" + "=" * 60 + "\n")
+    demo_template()
+
 
