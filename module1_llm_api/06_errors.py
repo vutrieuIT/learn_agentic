@@ -1,6 +1,8 @@
 import os, time, random, logging
 from dotenv import load_dotenv
-from groq import (Groq, APIConnectionError, APITimeoutError, RateLimitError, InternalServerError, BadRequestError)
+from groq import (Groq, APIConnectionError, APITimeoutError, 
+                  RateLimitError, InternalServerError, BadRequestError, APIStatusError)
+import unicodedata
 
 load_dotenv()
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
@@ -10,8 +12,8 @@ client = Groq(api_key=os.environ['GROQ_API_KEY'])
 
 RETRYABLE = (RateLimitError, APITimeoutError, APIConnectionError, InternalServerError)
 
-def call_with_retry(messages, *, model="openai/gpt-oss-20b", max_tokens=512, temperature=0, max_attemps=5):
-    for attemp in range(max_attemps + 1):
+def call_with_retry(messages, *, model="openai/gpt-oss-20b", max_tokens=512, temperature=0, max_attempts=5):
+    for attempt in range(1, max_attempts + 1, 1):
         try:
             resp = client.chat.completions.create(
                 model=model,
@@ -19,22 +21,26 @@ def call_with_retry(messages, *, model="openai/gpt-oss-20b", max_tokens=512, tem
                 temperature=temperature,
                 max_tokens=max_tokens
             )
-        except BadRequestError as e:
+        except (BadRequestError, APIStatusError) as e:
             log.error("bad request, not retry %s", e)
             raise
         except RETRYABLE as e:
-            if attemp == max_attemps:
-                log.error('give up after %d attemps: %s', max_attemps, e)
+            if attempt == max_attempts:
+                log.error('give up after %d attemps: %s', max_attempts, e)
                 raise
-            wait = _retry_after(e) or _backoff(e)
+            wait = _retry_after(e) or _backoff(attempt)
             log.warning("lỗi tạm thời %s -> chờ %.1fs [%d,%d]",
-                        type(e).__name__, wait, attemp, max_attemps)
+                        type(e).__name__, wait, attempt, max_attempts)
             time.sleep(wait)
             continue
 
         choice = resp.choices[0]
         if (choice.finish_reason == 'length'):
-            log.warning('out bị cắt, chạm max tokens = %d', max_tokens)
+            if not (choice.message.content or "").strip():
+                log.warning("chạm max_tokens ngay trong lúc reasoning -> content rỗng, "
+                        "cần tăng max_tokens hoặc tắt reasoning")
+        else:
+            log.warning("output bị cắt giữa chừng (max_tokens=%d)", max_tokens)
         return choice.message.content, choice.finish_reason
 
     raise RuntimeError('unreachable')
@@ -46,7 +52,7 @@ def _backoff(attempt: int) -> float:
 def _retry_after(ex):
     """đọc retry after"""
     resp = getattr(ex, "response", None)
-    if resp in None:
+    if resp is None:
         return None
     val = resp.headers.get("retry-after")
     return float(val) if val else None
@@ -72,10 +78,17 @@ def demo_truncation():
 
 
 # ---------- DEMO 3: phát hiện refusal ----------
-REFUSAL_HINTS = ("tôi không thể", "i cannot", "i can't", "i'm unable", "xin lỗi, tôi không")
+def _norm(text: str) -> str:
+    t = unicodedata.normalize("NFKC", text)      # gộp các biến thể ký tự
+    t = t.replace("\u2019", "'").replace("\u2018", "'")  # ’ ‘ -> '
+    t = t.replace("\u201c", '"').replace("\u201d", '"')  # " " -> "
+    return t.lower().strip()
+
+REFUSAL_HINTS = ("tôi không thể", "i cannot", "i can't", "i'm sorry",
+                 "i'm unable", "i am sorry", "xin lỗi, tôi không")
 
 def looks_like_refusal(text: str) -> bool:
-    low = text.lower().strip()
+    low = _norm(text)
     return any(h in low for h in REFUSAL_HINTS) and len(low) < 300
 
 def demo_refusal():
