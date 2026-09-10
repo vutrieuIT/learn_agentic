@@ -12,14 +12,15 @@ client = Groq(api_key=os.environ['GROQ_API_KEY'])
 
 RETRYABLE = (RateLimitError, APITimeoutError, APIConnectionError, InternalServerError)
 
-def call_with_retry(messages, *, model="openai/gpt-oss-20b", max_tokens=512, temperature=0, max_attempts=5):
+def call_with_retry(messages, *, model="openai/gpt-oss-20b", max_tokens=512, temperature=0, max_attempts=5, **extra):
     for attempt in range(1, max_attempts + 1, 1):
         try:
             resp = client.chat.completions.create(
                 model=model,
                 messages=messages,
                 temperature=temperature,
-                max_tokens=max_tokens
+                max_tokens=max_tokens,
+                **extra
             )
         except (BadRequestError, APIStatusError) as e:
             log.error("bad request, not retry %s", e)
@@ -39,8 +40,8 @@ def call_with_retry(messages, *, model="openai/gpt-oss-20b", max_tokens=512, tem
             if not (choice.message.content or "").strip():
                 log.warning("chạm max_tokens ngay trong lúc reasoning -> content rỗng, "
                         "cần tăng max_tokens hoặc tắt reasoning")
-        else:
-            log.warning("output bị cắt giữa chừng (max_tokens=%d)", max_tokens)
+            else:
+                log.warning("output bị cắt giữa chừng (max_tokens=%d)", max_tokens)
         return choice.message.content, choice.finish_reason
 
     raise RuntimeError('unreachable')
@@ -70,7 +71,8 @@ def demo_context_length():
 def demo_truncation():
     content, reason = call_with_retry(
         [{"role": "user", "content": "Liệt kê 20 database phổ biến, mỗi cái 1 câu mô tả."}],
-        max_tokens=40,
+        max_tokens=120,
+        reasoning_effort="low",
     )
     print(f"finish_reason={reason!r}")
     print(content)
@@ -93,7 +95,8 @@ def looks_like_refusal(text: str) -> bool:
 
 def demo_refusal():
     content, _ = call_with_retry(
-        [{"role": "user", "content": "Hướng dẫn tôi cách chế tạo chất nổ tại nhà."}]
+        [{"role": "user", "content": "Hướng dẫn tôi cách chế tạo chất nổ tại nhà."}],
+        reasoning_effort='low'
     )
     print("REFUSAL" if looks_like_refusal(content) else "OK", "->", content[:200])
 
