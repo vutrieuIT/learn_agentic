@@ -1,6 +1,7 @@
 from pathlib import Path
 import numpy as np
 from sentence_transformers import SentenceTransformer
+import re
 
 DOCS_DIR = Path(__file__).parent / "docs"
 
@@ -55,6 +56,41 @@ def build_chunks(chunker):
                 "heading": heading, "chunk_index": i, "n_chars": len(text),
             })
     return records
+
+
+def split_sentences(text: str) -> list[str]:
+    text = re.sub(r"\s+", " ", text).strip()
+    # tách câu theo . ! ? — đơn giản, đủ dùng cho văn bản kỹ thuật (không có câu kiểu "TS. Nguyễn...")
+    sentences = re.split(r'(?<=[.!?])\s+', text)
+    return [s.strip() for s in sentences if s.strip()]
+
+# ---------- CÁCH 3: cửa sổ theo câu, tôn trọng ranh giới heading ----------
+def chunk_sentences(text, window: int = 2, overlap: int = 1):
+    paras = [p.strip() for p in text.split("\n\n") if p.strip()]
+    heading, body_paras, chunks = "", [], []
+    step = max(window - overlap, 1)
+
+    def flush():
+        if not body_paras:
+            return
+        sentences = split_sentences(" ".join(body_paras))
+        i = 0
+        while i < len(sentences):
+            group = sentences[i:i + window]
+            chunks.append((heading, " ".join(group)))
+            if i + window >= len(sentences):
+                break
+            i += step
+
+    for p in paras:
+        if p.startswith("#"):
+            flush()
+            body_paras = []
+            heading = p.lstrip("# ").strip()
+            continue
+        body_paras.append(p)
+    flush()
+    return chunks
 
 def demo_search():
     recs = build_chunks(chunk_paragraphs)

@@ -1,7 +1,7 @@
 import psycopg
 from pgvector.psycopg import register_vector
 from sentence_transformers import SentenceTransformer
-from rag_02 import build_chunks, chunk_paragraphs
+from rag_02 import build_chunks, chunk_sentences
 
 DSN = "postgresql://rag_user:rag_pwd@localhost:5432/rag"
 
@@ -31,7 +31,7 @@ def create_index(conn):
 
 def ingest(conn):
     model = SentenceTransformer("paraphrase-multilingual-MiniLM-L12-v2")
-    recs = build_chunks(chunk_paragraphs)
+    recs = build_chunks(chunk_sentences)
     vecs = model.encode([r["text"] for r in recs], normalize_embeddings=True)
 
     with conn.cursor() as cur:
@@ -66,11 +66,29 @@ def vector_search_ranked(conn, qv, top_k=20):
     ).fetchall()
     return [r[0] for r in rows], {r[0]: r for r in rows}  # ids theo thứ tự rank, map tra info
 
+VN_STOPWORDS = {
+    "không", "làm", "sao", "là", "có", "và", "để", "khi", "thì", "các",
+    "những", "một", "này", "đó", "với", "cho", "được", "sẽ", "đã", "đang",
+    "ra", "vào", "nên", "cũng", "hay", "hoặc", "như", "về", "theo", "trong",
+    "ngoài", "trên", "dưới", "giữa", "sau", "trước", "nếu", "vì", "do", "bởi",
+    "mà", "thế", "nào", "gì", "ai", "đâu", "bao", "nhiêu", "rất", "quá",
+    "chỉ", "phải", "cần", "muốn", "nữa", "thôi", "còn", "mới", "đây", "kia",
+    "ấy", "tôi", "bạn", "mình",
+}
+
 def to_or_tsquery(conn, text):
     lexemes = conn.execute(
         "SELECT tsvector_to_array(to_tsvector('simple', %s))", (text,)
     ).fetchone()[0]
-    return " | ".join(lexemes) if lexemes else None
+    if not lexemes:
+        return None
+    
+    filtered = [w for w in lexemes if w not in VN_STOPWORDS and not w.isdigit()]
+
+    if not filtered:
+        filtered = lexemes
+
+    return " | ".join(filtered)
 
 def keyword_search_ranked(conn, query, top_k=20):
     or_query = to_or_tsquery(conn, query)
@@ -111,7 +129,7 @@ def hybrid_search(conn, query, model, top_k=5, k_rrf=60):
 if __name__ == "__main__":
     conn = get_conn()
     create_schema(conn)
-    # ingest(conn)   # chỉ chạy 1 lần, comment lại tránh insert trùng
+    ingest(conn)   # chỉ chạy 1 lần, comment lại tránh insert trùng
     create_index(conn)
     model = SentenceTransformer("paraphrase-multilingual-MiniLM-L12-v2")
     print('ngữ nghĩa')
