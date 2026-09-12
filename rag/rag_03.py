@@ -99,9 +99,14 @@ def hybrid_search(conn, query, model, top_k=5, k_rrf=60):
 
     info = {**vec_info, **kw_info}
     ranked = sorted(scores.items(), key=lambda x: -x[1])[:top_k]
-    for doc_id, s in ranked:
-        _, source, heading, text = info[doc_id]
-        print(f"{s:.4f}  {source:20} :: {heading}")
+    # for doc_id, s in ranked:
+    #     _, source, heading, text = info[doc_id]
+    #     print(f"{s:.4f}  {source:20} :: {heading}")
+    return [
+        {"id": doc_id, "score": s, "source": info[doc_id][1],
+         "heading": info[doc_id][2], "text": info[doc_id][3]}
+        for doc_id, s in ranked
+    ]
 
 if __name__ == "__main__":
     conn = get_conn()
@@ -110,6 +115,8 @@ if __name__ == "__main__":
     create_index(conn)
     model = SentenceTransformer("paraphrase-multilingual-MiniLM-L12-v2")
     print('ngữ nghĩa')
-    hybrid_search(conn, "làm sao 2 request thanh toán không tạo 2 đơn", model)
+    for r in hybrid_search(conn, "làm sao 2 request thanh toán không tạo 2 đơn", model):
+        print(f"{r['score']:.4f}  {r['source']:20} :: {r['heading']}")
     print('keyword')
-    hybrid_search(conn, "idempotency key retry POST", model)
+    for r in hybrid_search(conn, "idempotency key retry POST", model):
+        print(f"{r['score']:.4f}  {r['source']:20} :: {r['heading']}")
