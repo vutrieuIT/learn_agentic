@@ -28,10 +28,10 @@ def answer(query: str, conn, model, llm: LLMClient, top_k: int = 5) -> str:
     # chunks = [c for c in chunks if c['score'] > THRESH]
     # if not chunks:
     #     return "Không tìm thấy thông tin trong tài liệu."
-    for c in chunks:
-        print(c["source"], "::", c["heading"], ' - ', c['score'])
-        print(c["text"][:200])
-        print("---")
+    # for c in chunks:
+    #     print(c["source"], "::", c["heading"], ' - ', c['score'])
+    #     print(c["text"][:200])
+    #     print("---")
     context = build_context(chunks)
     user_prompt = f"CONTEXT:\n{context}\n\nCÂU HỎI: {query}"
     return llm.ask(user_prompt, system=SYSTEM_PROMPT)
@@ -41,7 +41,9 @@ if __name__ == "__main__":
     embed_model = SentenceTransformer("paraphrase-multilingual-MiniLM-L12-v2")
     llm = LLMClient()
 
-    q = "làm sao 2 request thanh toán không tạo 2 đơn"
-    print(answer(q, conn, embed_model, llm))
-    print("\n---\n")
+    qs = ["làm sao 2 request thanh toán không tạo 2 đơn", "redis cluster là gì?"]
+    for q in qs:
+        print(q)
+        print(answer(q, conn, embed_model, llm))
+        print("\n---\n")
     print(llm.usage)
