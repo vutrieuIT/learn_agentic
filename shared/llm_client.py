@@ -46,6 +46,7 @@ class LLMResult:
     total_tokens: int
     latency_s: float
     model: str
+    tool_calls: list | None = None
 
 @dataclass
 class Usage:
@@ -120,6 +121,7 @@ class LLMClient:
                 total_tokens=u.total_tokens,
                 latency_s=latency,
                 model=model,
+                tool_calls=choice.message.tool_calls
             )
             call_cost = self.usage.add(result)
             log.info("%s | in=%d out=%d | %.2fs | $%.5f (session $%.4f)", 
