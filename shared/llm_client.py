@@ -17,6 +17,7 @@ RETRYABLE = (RateLimitError, APITimeoutError, APIConnectionError, InternalServer
 PRICING = { # mock price
     "openai/gpt-oss-20b":  {"in": 0.1, "out": 0.2},
     "qwen/qwen3.8-27b":    {"in": 0.3, "out": 0.4},
+    "openai/gpt-oss-120b": {"in": 0.3, "out": 1},
 }
 
 def _cost(model: str, prompt_tok: int, completion_tok: int) -> float:
@@ -109,7 +110,7 @@ class LLMClient:
 
             if (choice.finish_reason == "length"):
                 if (choice.message.content or "").strip():      # CÓ content -> bị cắt giữa câu
-                    log.warning("output bị cắt giữa chừng (max_tokens=%d)", max_tokens)
+                    log.warning("output bị cắt giữa chừng (max_tokens=%d), (complettion_tokens = %d)", max_tokens, u.completion_tokens)
                 else:                                            # RỖNG -> reasoning ăn hết
                     log.warning("content rỗng — reasoning ăn hết %d token, tăng max_tokens", max_tokens)
 
