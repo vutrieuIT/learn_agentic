@@ -75,7 +75,7 @@ Mục tiêu: chạy LLM trong production rẻ, ổn định, đo được.
   - [x] Batch API: task không cần real-time -> rẻ hơn ~50%
   - [x] Token budget: đếm token trước khi gọi, cắt context, nén lịch sử hội thoại
   - [x] Observability: trace từng call, cost, latency, token (tự viết logger; chưa dùng Langfuse/Phoenix)
-  - [ ] Evaluation: tạo eval set, chấm điểm output (LLM-as-judge, assertion, regression test)
+  - [x] Evaluation: tạo eval set, chấm điểm output (LLM-as-judge, assertion, regression test)
   - [ ] Đưa eval vào CI: prompt thay đổi -> chạy eval -> không regression mới merge
   - [ ] Guardrails: lọc PII, chặn prompt injection, kiểm tra output
 Thực hành: PROJECT 3 — [ ] chưa làm.
