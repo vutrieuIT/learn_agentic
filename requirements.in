@@ -1,0 +1,8 @@
+groq
+python-dotenv
+pydantic
+sentence-transformers
+psycopg[binary]
+pgvector
+mcp
+numpy
