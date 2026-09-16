@@ -66,7 +66,7 @@ Mục tiêu: LLM tự thực hiện chuỗi hành động qua công cụ.
   - [ ] Khi nào KHÔNG cần agent (workflow cố định thì viết code thường rẻ + ổn định hơn)
 Thực hành: PROJECT 2 — [ ] chưa làm.
 
-4. [~] LLMOps — TỐI ƯU CHI PHÍ & VẬN HÀNH   <-- đây là phần "tiết kiệm" + kỹ năng DevOps — ĐANG LÀM
+4. [x] LLMOps — TỐI ƯU CHI PHÍ & VẬN HÀNH   <-- đây là phần "tiết kiệm" + kỹ năng DevOps — HỌC XONG (Project 3 thực hành chưa làm)
 -----------------------------------------------------------------------------------
 Mục tiêu: chạy LLM trong production rẻ, ổn định, đo được.
   - [x] Chọn model theo task: model nhỏ/nhanh (Haiku) cho task đơn giản,
@@ -78,18 +78,20 @@ Mục tiêu: chạy LLM trong production rẻ, ổn định, đo được.
   - [x] Evaluation: tạo eval set, chấm điểm output (LLM-as-judge, assertion, regression test)
   - [x] Đưa eval vào CI: prompt thay đổi -> chạy eval -> không regression mới merge
     (GitHub Actions: .github/workflows/eval.yml, chạy module4_llmops/eval_05.py, đã verify pass thật trên runner Linux)
-  - [ ] Guardrails: lọc PII, chặn prompt injection, kiểm tra output
+  - [x] Guardrails: lọc PII, chặn prompt injection, kiểm tra output
+    (module4_llmops/guardrails_06.py: redact_pii dùng span-resolve tránh overlap regex,
+    detect_injection keyword-based, pipeline safe_ask() ráp cả 3 lớp — đã verify chạy thật: chặn injection, che PII input lẫn output)
 Thực hành: PROJECT 3 — [ ] chưa làm.
 
-5. [ ] LOCAL / SELF-HOSTED MODELS   <-- DevOps thực hành + cắt chi phí API — CHƯA BẮT ĐẦU
+5. [~] LOCAL / SELF-HOSTED MODELS   <-- DevOps thực hành + cắt chi phí API — GẦN XONG (còn thiếu vLLM chạy thật + PROJECT 3)
 --------------------------------------------------------------------
 Mục tiêu: chạy model trên hạ tầng của mình khi cần riêng tư / rẻ / offline.
-  - [ ] Ollama: chạy model local nhanh (Llama, Qwen, Mistral, Phi)
-  - [ ] Quantization: GGUF, 4-bit — đánh đổi chất lượng lấy RAM/tốc độ
-  - [ ] vLLM: serving throughput cao, OpenAI-compatible API
-  - [ ] So sánh: khi nào self-host rẻ hơn API, khi nào không (tính GPU + vận hành)
-  - [ ] Deploy: container hoá, đo tokens/sec, concurrency, GPU memory
-Thực hành: thêm nhánh local model + fallback vào PROJECT 3.
+  - [x] Ollama: chạy model local nhanh (Llama, Qwen, Mistral, Phi)
+  - [x] Quantization: GGUF, 4-bit — đánh đổi chất lượng lấy RAM/tốc độ
+  - [~] vLLM: serving throughput cao, OpenAI-compatible API (mới học khái niệm PagedAttention/continuous batching, chưa chạy thật — image nặng ~10GB, quyết định bỏ qua)
+  - [x] So sánh: khi nào self-host rẻ hơn API, khi nào không (tính GPU + vận hành)
+  - [x] Deploy: container hoá, đo tokens/sec, concurrency, GPU memory
+Thực hành: [ ] thêm nhánh local model + fallback vào PROJECT 3 — chưa làm.
 
 6. [~] THÀNH THẠO AI TRONG WORKFLOW HẰNG NGÀY   <-- đòn bẩy lớn nhất, làm song song từ đầu — ĐANG LÀM LIÊN TỤC (đã có CLAUDE.md cho repo)
 ----------------------------------------------------------------------------------
