@@ -76,7 +76,8 @@ Mục tiêu: chạy LLM trong production rẻ, ổn định, đo được.
   - [x] Token budget: đếm token trước khi gọi, cắt context, nén lịch sử hội thoại
   - [x] Observability: trace từng call, cost, latency, token (tự viết logger; chưa dùng Langfuse/Phoenix)
   - [x] Evaluation: tạo eval set, chấm điểm output (LLM-as-judge, assertion, regression test)
-  - [ ] Đưa eval vào CI: prompt thay đổi -> chạy eval -> không regression mới merge
+  - [x] Đưa eval vào CI: prompt thay đổi -> chạy eval -> không regression mới merge
+    (GitHub Actions: .github/workflows/eval.yml, chạy module4_llmops/eval_05.py, đã verify pass thật trên runner Linux)
   - [ ] Guardrails: lọc PII, chặn prompt injection, kiểm tra output
 Thực hành: PROJECT 3 — [ ] chưa làm.
 
