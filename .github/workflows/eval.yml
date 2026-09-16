@@ -10,7 +10,8 @@ on:
     paths:
       - 'module4_llmops/**'
       - 'shared/**'
-
+  workflow_dispatch: {}
+  
 jobs:
   eval:
     runs-on: ubuntu-latest
