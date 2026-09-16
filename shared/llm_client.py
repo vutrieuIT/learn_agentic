@@ -17,7 +17,7 @@ RETRYABLE = (RateLimitError, APITimeoutError, APIConnectionError, InternalServer
 PRICING = { # mock price
     "openai/gpt-oss-20b":  {"in": 0.1, "out": 0.2},
     "qwen/qwen3.8-27b":    {"in": 0.3, "out": 0.4},
-    "openai/gpt-oss-120b": {"in": 0.3, "out": 1},
+    "openai/gpt-oss-120b": {"in": 0.3, "out": 1.2},
 }
 
 def _cost(model: str, prompt_tok: int, completion_tok: int) -> float:
