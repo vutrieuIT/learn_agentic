@@ -5,6 +5,7 @@ from dataclasses import dataclass, field
 from dotenv import load_dotenv, find_dotenv
 from groq import (Groq, APIConnectionError, APITimeoutError, RateLimitError, InternalServerError,
                   BadRequestError, APIStatusError)
+from openai import OpenAI
 
 load_dotenv(find_dotenv(), override=True)
 log = logging.getLogger("llm_client")
@@ -70,12 +71,16 @@ class Usage:
 
 class LLMClient:
     def __init__(self, model: str = DEFAULT_MODEL, *, temperature: float = 0,
-                 max_tokens: int = 512, max_attempts: int = 5, api_key: str | None = None):
+             max_tokens: int = 512, max_attempts: int = 5,
+             api_key: str | None = None, base_url: str | None = None):
         self.model = model
         self.temperature = temperature
         self.max_tokens = max_tokens
         self.max_attempts = max_attempts
-        self._client = Groq(api_key=api_key or os.environ["GROQ_API_KEY"])
+        if base_url:
+            self._client = OpenAI(api_key=api_key or "ollama", base_url=base_url)
+        else:
+            self._client = Groq(api_key=api_key or os.environ["GROQ_API_KEY"])
         self.usage = Usage()
 
     def chat(self, messages: list[dict], *, model: str | None = None,
